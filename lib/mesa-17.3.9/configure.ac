@@ -45,6 +45,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE([foreign tar-ustar dist-xz subdir-objects])
 
+AM_MAINTAINER_MODE
+
 dnl We only support native Windows builds (MinGW/MSVC) through SCons.
 case "$host_os" in
 mingw*)
@@ -156,6 +158,15 @@ else
         fi
     fi
 fi
+
+dnl Avoid attempting to rebuild files with python and yacc
+AC_ARG_ENABLE([regen-sources],
+   [AS_HELP_STRING([--disable-regen-sources],
+       [disable regenerating source with python and yacc @<:@default=enabled@:>@])],
+   [regen_sources="$enableval"],
+   [regen_sources=yes])
+
+AM_CONDITIONAL(REGEN_SOURCES, test "x$regen_sources" = xyes)
 
 AC_PROG_INSTALL
 
@@ -394,6 +405,19 @@ if test "x$GCC_ATOMIC_BUILTINS_SUPPORTED" = x1; then
 fi
 AM_CONDITIONAL([GCC_ATOMIC_BUILTINS_SUPPORTED], [test x$GCC_ATOMIC_BUILTINS_SUPPORTED = x1])
 AC_SUBST([LIBATOMIC_LIBS])
+
+dnl Check if host supports 32-bit atomics
+AC_MSG_CHECKING(whether __sync_add_and_fetch_4 is supported)
+AC_LINK_IFELSE([AC_LANG_SOURCE([[
+#include <stdint.h>
+uint64_t v;
+int main() {
+    return __sync_add_and_fetch(&v, (uint32_t)1);
+}]])], GCC_32BIT_ATOMICS_SUPPORTED=yes, GCC_32BIT_ATOMICS_SUPPORTED=no)
+if test "x$GCC_32BIT_ATOMICS_SUPPORTED" != xyes; then
+    DEFINES="$DEFINES -DMISSING_32BIT_ATOMICS"
+fi
+AC_MSG_RESULT($GCC_32BIT_ATOMICS_SUPPORTED)
 
 dnl Check if host supports 64-bit atomics
 dnl note that lack of support usually results in link (not compile) error
@@ -792,6 +816,7 @@ AC_HEADER_MAJOR
 AC_CHECK_HEADER([xlocale.h], [DEFINES="$DEFINES -DHAVE_XLOCALE_H"])
 AC_CHECK_HEADER([sys/sysctl.h], [DEFINES="$DEFINES -DHAVE_SYS_SYSCTL_H"])
 AC_CHECK_HEADERS([endian.h])
+AC_CHECK_HEADER([sys/random.h], [DEFINES="$DEFINES -DHAVE_SYS_RANDOM_H"])
 AC_CHECK_FUNC([strtof], [DEFINES="$DEFINES -DHAVE_STRTOF"])
 AC_CHECK_FUNC([mkostemp], [DEFINES="$DEFINES -DHAVE_MKOSTEMP"])
 AC_CHECK_FUNC([memfd_create], [DEFINES="$DEFINES -DHAVE_MEMFD_CREATE"])
@@ -845,6 +870,9 @@ esac
 
 dnl See if posix_memalign is available
 AC_CHECK_FUNC([posix_memalign], [DEFINES="$DEFINES -DHAVE_POSIX_MEMALIGN"])
+
+dnl See if getentropy is available
+AC_CHECK_FUNC([getentropy], [DEFINES="$DEFINES -DHAVE_GETENTROPY"])
 
 dnl Check for zlib
 PKG_CHECK_MODULES([ZLIB], [zlib >= $ZLIB_REQUIRED])
@@ -2478,7 +2506,7 @@ if test -n "$with_gallium_drivers"; then
             HAVE_GALLIUM_R300=yes
             PKG_CHECK_MODULES([RADEON], [libdrm >= $LIBDRM_RADEON_REQUIRED libdrm_radeon >= $LIBDRM_RADEON_REQUIRED])
             require_libdrm "r300"
-            r300_require_llvm "r300"
+#            r300_require_llvm "r300"
             ;;
         xr600)
             HAVE_GALLIUM_R600=yes

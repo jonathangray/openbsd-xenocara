@@ -66,7 +66,7 @@ libxmlconfig_la_CFLAGS = \
 	$(EXPAT_CFLAGS)
 libxmlconfig_la_LIBADD = $(EXPAT_LIBS) -lm
 
-sysconf_DATA = drirc
+sysconf_DATA =
 
 u_atomic_test_LDADD = libmesautil.la
 roundeven_test_LDADD = -lm
@@ -85,7 +85,9 @@ EXTRA_DIST = \
 	xmlpool.h \
 	sha1/README
 
+if REGEN_SOURCES
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
 
 format_srgb.c: format_srgb.py
 	$(PYTHON_GEN) $(srcdir)/format_srgb.py > $@
+endif
