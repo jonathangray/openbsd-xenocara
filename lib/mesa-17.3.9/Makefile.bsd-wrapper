@@ -23,6 +23,7 @@ CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--with-gallium-drivers=${GALLIUM_DRIVERS} \
 			--disable-silent-rules \
 			--enable-llvm \
+			--with-llvm-prefix=/usr/local \
 			--disable-glx-tls \
 			--disable-regen-sources \
 			--enable-gles1 --enable-gles2 \
@@ -65,6 +66,25 @@ O2= ${O1} -fthread-jumps -fcrossjumping -foptimize-sibling-calls \
 
 CONFIGURE_ARGS+=       USER_CFLAGS="-O0 ${O2}"
 .endif
+
+PKGCONFIG_LIBDIR=	/usr/lib/pkgconfig:${X11BASE}/lib/pkgconfig:/usr/local/lib/pkgconfig
+
+XENOCARA_PATH=	/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin
+
+config.status:
+	PKG_CONFIG_LIBDIR="${PKGCONFIG_LIBDIR}" \
+	CONFIG_SITE=$(CONFIG_SITE) \
+	CC=${CC} \
+	CFLAGS="${CFLAGS}" \
+	CXX=${CXX} \
+	CXXFLAGS="${CXXFLAGS}" \
+	AR_FLAGS="cruD" \
+	MAKE="${MAKE}" \
+	PATH=$(XENOCARA_PATH) \
+		sh ${_SRCDIR}/configure --prefix=${X11BASE} \
+		--sysconfdir=/etc \
+		--mandir=${X11BASE}/man \
+		${CONFIGURE_ARGS}
 
 ${.OBJDIR}/src/util/format_srgb.c:
 	lndir -s -e obj -e obj.${MACHINE_ARCH} -e Makefile.bsd-wrapper ${.CURDIR}
