@@ -915,8 +915,8 @@ uninstall-am:
 	tags uninstall uninstall-am
 
 
-si_driinfo.h: $(MERGE_DRIINFO) $(GEN_DRIINFO_INPUTS)
-	$(PYTHON_GEN) $(MERGE_DRIINFO) $(GEN_DRIINFO_INPUTS) > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@si_driinfo.h: $(MERGE_DRIINFO) $(GEN_DRIINFO_INPUTS)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(MERGE_DRIINFO) $(GEN_DRIINFO_INPUTS) > $@ || ($(RM) $@; false)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
