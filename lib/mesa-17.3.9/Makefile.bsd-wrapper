@@ -32,7 +32,7 @@ CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--enable-osmesa \
 			--enable-gbm \
 			--enable-texture-float \
-			--with-egl-platforms="x11,drm" \
+			--with-platforms="x11,drm" \
 			--prefix=${X11BASE} \
 			--with-dri-driverdir=${X11BASE}/lib/modules/dri \
 			--with-dri-searchpath=${X11BASE}/lib/modules/dri
